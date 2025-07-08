@@ -1,0 +1,64 @@
+name: release-ubuntu
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create release
+        run: |
+          rm -rf release 
+          mkdir release
+          echo ${{ github.sha }} > Release.txt
+          cp Release.txt LICENSE release/
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '8'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Compile frontend
+        working-directory: wvp-GB28181-pro/web
+        run: |
+          npm install
+          npm run build:prod
+
+      - name: Compile backend
+        working-directory: wvp-GB28181-pro
+        run: |
+          mvn package
+          mvn package -P war
+
+      - name: Package Files
+        run: |
+          cp -r ./wvp-GB28181-pro/web/dist release/web  # 复制前端文件
+          cp ./wvp-GB28181-pro/target/*.jar release/     # 复制 JAR 文件
+          cp ./wvp-GB28181-pro/src/main/resources/application-dev.yml rlease/
+          zip -r release-ubuntu-${{ matrix.arch }}.zip release
+
+      - name: Test
+        run: cat Release.txt
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: release-ubuntu-${{ matrix.arch }}.zip
+          update_latest_release: true
