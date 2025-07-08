@@ -38,20 +38,19 @@ jobs:
         run: |
           mvn package
           mvn package -P war
-          ls
 
       - name: Compile frontend
         run: |
           cd ./web
           npm install
           npm run build:prod
+          tree -L 2
           cd ../
-          ls
+
 
       - name: Package Files
         run: |
-          ls
-          cp -r ./web/dist release/web  # 复制前端文件
+          cp -r ./web/* release/web  # 复制前端文件
           cp ./target/*.jar release/     # 复制 JAR 文件
           cp ./src/main/resources/application-dev.yml rlease/
           zip -r release-ubuntu-${{ matrix.arch }}.zip release
