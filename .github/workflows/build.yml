@@ -44,13 +44,11 @@ jobs:
           cd ./web
           npm install
           npm run build:prod
-          tree -L 1
           cd ../
 
       - name: Package Files
         run: |
-          mkdir -p release/web 
-          cp -r ./web/* release/web  # 复制前端文件
+          cp -r ./src/main/resources/static release/  # 复制前端文件
           cp ./target/*.jar release/     # 复制 JAR 文件
           cp ./src/main/resources/application-dev.yml release
           zip -r release-ubuntu-${{ matrix.arch }}.zip release
@@ -60,4 +58,3 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: release-ubuntu-${{ matrix.arch }}.zip
-          update_latest_release: true
