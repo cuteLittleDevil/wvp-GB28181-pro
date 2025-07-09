@@ -54,17 +54,19 @@ jobs:
           cp -r ./src/main/resources/static release/  # 复制前端文件
           cp ./target/*.jar release/     # 复制 JAR 文件
           cp ./src/main/resources/application-dev.yml release
-          # 尝试获取本次的分支
-          BRANCH=$(git branch -r | grep HEAD | head -n 1 | awk '{split($3,a,"/"); print a[length(a)]}') 
-          echo "BRANCH= ${BRANCH}"
+          
+          BRANCH=${{ github.event.base_ref }}
+          BRANCH_NAME=$(echo "$BRANCH" | grep -oP 'refs/heads/\K.*')
+          echo "BRANCH_NAME= ${BRANCH_NAME}"
+          echo "a1= ${BRANCH}"
           # 如果无法获取，使用默认分支
-          if [[ -z "$BRANCH" ]]; then
-            BRANCH="${{ github.event.repository.default_branch }}"
+          if [[ -z "BRANCH_NAME" ]]; then
+            BRANCH_NAME="${{ github.event.repository.default_branch }}"
           fi
           
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           DATE=$(date +%Y%m%d)
-          ZIP_FILE_NAME="${BRANCH}-${TAG_NAME}-${DATE}.zip"
+          ZIP_FILE_NAME="${BRANCH_NAME}-${TAG_NAME}-${DATE}.zip"
           zip -r "$ZIP_FILE_NAME" release
           echo "ZIP_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
 
