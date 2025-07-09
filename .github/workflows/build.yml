@@ -54,8 +54,9 @@ jobs:
           cp -r ./src/main/resources/static release/  # 复制前端文件
           cp ./target/*.jar release/     # 复制 JAR 文件
           cp ./src/main/resources/application-dev.yml release
-          # 尝试从远程仓库获取分支信息
-          BRANCH=$(git branch -r --contains ${{ github.sha }} | grep -v HEAD | head -n 1 | awk '{print $1}' | sed 's/origin\///') 
+          # 尝试获取本次的分支
+          BRANCH=$(git branch -r | grep HEAD | head -n 1 | awk '{split($3,a,"/"); print a[length(a)]}') 
+          echo "BRANCH= ${BRANCH}"
           # 如果无法获取，使用默认分支
           if [[ -z "$BRANCH" ]]; then
             BRANCH="${{ github.event.repository.default_branch }}"
@@ -64,7 +65,6 @@ jobs:
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           DATE=$(date +%Y%m%d)
           ZIP_FILE_NAME="${BRANCH}-${TAG_NAME}-${DATE}.zip"
-          echo "${ZIP_FILE_NAME}"
           zip -r "$ZIP_FILE_NAME" release
           echo "ZIP_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
 
